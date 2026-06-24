@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Sparkles } from "lucide-react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LogoutButton } from "@/components/auth/logout-button"
 import { Button } from "@/components/ui/button"
 
 export function SiteHeader() {
@@ -26,6 +27,7 @@ export function SiteHeader() {
             <Link href="/dashboard">Dashboard</Link>
           </Button>
           <ThemeToggle />
+          <LogoutButton />
           <Button asChild size="sm" className="shadow-sm">
             <Link href="/generator">Get Started</Link>
           </Button>

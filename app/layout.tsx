@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono, Inter } from "next/font/google"
 
-import { SiteHeader } from "@/components/layout/site-header"
+import { AuthProvider } from "@/components/auth/auth-provider"
+import { AppShell } from "@/components/auth/app-shell"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 
@@ -52,8 +53,9 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
+          <AuthProvider>
+            <AppShell>{children}</AppShell>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

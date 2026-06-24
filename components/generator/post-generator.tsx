@@ -5,6 +5,7 @@ import { Loader2, Sparkles, Wand2 } from "lucide-react"
 
 import { useCopyToClipboard } from "@/components/generator/copy-button"
 import { OutputPanel } from "@/components/generator/output-panel"
+import { useAuth } from "@/components/auth/auth-provider"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { downloadImage } from "@/lib/download-image"
+import { saveGeneration } from "@/lib/firebase/save-generation"
 import {
   BRAND_TONES,
   type BrandTone,
@@ -57,6 +59,7 @@ export function PostGenerator() {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const { copiedKey, copy } = useCopyToClipboard()
+  const { user } = useAuth()
 
   const generateImage = useCallback(async (prompt: string) => {
     setImageError(null)
@@ -72,9 +75,11 @@ export function PostGenerator() {
         throw new Error("error" in data ? data.error : "Failed to generate image")
       }
       setImageUrl(data.image_url)
+      return data.image_url
     } catch (generateError) {
       setImageUrl(null)
       setImageError(generateError instanceof Error ? generateError.message : "Something went wrong")
+      return null
     } finally {
       setIsGeneratingImage(false)
     }
@@ -99,7 +104,17 @@ export function PostGenerator() {
         setResult(data)
         setExpandedPrompt(data.expanded_prompt || request.customPrompt || request.topic)
         setLastRequest(request)
-        if (data.image_prompt) await generateImage(data.image_prompt)
+        let savedImageUrl: string | null = null
+        if (data.image_prompt) savedImageUrl = await generateImage(data.image_prompt)
+        if (user) {
+          void saveGeneration({
+            userId: user.uid,
+            mode: "text",
+            caption: data.caption,
+            hashtags: data.hashtags,
+            imageUrl: savedImageUrl,
+          })
+        }
       } catch (submitError) {
         setResult(null)
         setError(submitError instanceof Error ? submitError.message : "Something went wrong")
@@ -107,7 +122,7 @@ export function PostGenerator() {
         setIsLoading(false)
       }
     },
-    [generateImage]
+    [generateImage, user]
   )
 
   const generateFromImage = useCallback(async () => {
@@ -135,13 +150,22 @@ export function PostGenerator() {
         image_prompt: "",
         expanded_prompt: "",
       })
+      if (user) {
+        void saveGeneration({
+          userId: user.uid,
+          mode: "image",
+          caption: data.caption,
+          hashtags: data.hashtags,
+          imageUrl,
+        })
+      }
     } catch (submitError) {
       setResult(null)
       setError(submitError instanceof Error ? submitError.message : "Something went wrong")
     } finally {
       setIsLoading(false)
     }
-  }, [uploadedBase64, uploadMimeType])
+  }, [uploadedBase64, uploadMimeType, user, imageUrl])
 
   function buildRequest(customPrompt?: string): GeneratePostRequest {
     return { platform, postType, topic, brandTone, ...(customPrompt ? { customPrompt } : {}) }
