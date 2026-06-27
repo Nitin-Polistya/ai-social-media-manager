@@ -35,6 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let cancelled = false
+    // Track the last synced uid to prevent repeated Firestore calls on token refresh
+    let lastSyncedUid: string | null = null
 
     async function initAuth() {
       try {
@@ -47,10 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (cancelled) return
         setUser(nextUser)
 
-        if (nextUser) {
+        // Only sync profile when the user identity actually changes (not on token refresh)
+        if (nextUser && nextUser.uid !== lastSyncedUid) {
+          lastSyncedUid = nextUser.uid
+          console.log("[Auth] User ready, uid:", nextUser.uid, "— syncing profile")
           syncUserProfile(nextUser).catch(() => {
             // Profile sync is non-blocking
           })
+        } else if (!nextUser) {
+          lastSyncedUid = null
         }
 
         setLoading(false)
