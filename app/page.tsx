@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ImageIcon, Sparkles, Wand2, Zap } from "lucide-react"
+import { ArrowRight, ImageIcon, Sparkles, Wand2, Zap } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -12,27 +12,27 @@ import {
 const features = [
   {
     icon: Wand2,
-    title: "Smart prompt expansion",
+    title: "Smart Prompt Expansion",
     description:
-      'Type "tea shop post" and get a full premium marketing brief — automatically.',
+      "Turn a one-line idea into a full, platform-ready marketing brief — automatically optimized for reach and engagement.",
   },
   {
     icon: Sparkles,
-    title: "AI-powered copy",
+    title: "AI-Powered Copywriting",
     description:
-      "Captions, hashtags, and CTAs optimized for Instagram, LinkedIn, Facebook, and X.",
+      "Generate scroll-stopping captions, viral hashtags, and compelling CTAs tailored to Instagram, LinkedIn, Facebook, and X.",
   },
   {
     icon: ImageIcon,
-    title: "Visual content",
+    title: "Visual Content Generation",
     description:
-      "Generate and download matching images powered by Stability AI.",
+      "Create on-brand images in seconds with Stability AI — perfectly matched to your copy and ready to publish.",
   },
   {
     icon: Zap,
-    title: "Refine & regenerate",
+    title: "Refine & Regenerate",
     description:
-      "Edit the expanded prompt and regenerate until it's perfect.",
+      "Edit your expanded prompt, regenerate in one click, and iterate until every post is publish-perfect.",
   },
 ]
 
@@ -43,15 +43,16 @@ export default function Home() {
         <section className="mx-auto max-w-3xl space-y-8 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
             <Sparkles className="size-4" />
-            AI Social Media Manager
+            AI Social Media Studio
           </div>
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
-            Create scroll-stopping content in{" "}
-            <span className="text-primary">seconds</span>
+            Ship publish-ready social content{" "}
+            <span className="text-primary">10× faster</span>
           </h1>
           <p className="text-lg text-muted-foreground sm:text-xl">
-            From a simple idea to a publish-ready post with caption, hashtags,
-            CTA, and image — all in one premium workflow.
+            SocialAI is your all-in-one content engine — from a rough idea to
+            caption, hashtags, CTA, and AI-generated visuals. Built for creators,
+            brands, and teams who move fast.
           </p>
           <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
             <Button
@@ -59,7 +60,10 @@ export default function Home() {
               size="lg"
               className="rounded-xl px-8 shadow-sm transition-all duration-200 hover:shadow-md"
             >
-              <Link href="/generator">Get Started</Link>
+              <Link href="/generator">
+                Start creating free
+                <ArrowRight data-icon="inline-end" />
+              </Link>
             </Button>
             <Button
               asChild
@@ -67,9 +71,12 @@ export default function Home() {
               size="lg"
               className="rounded-xl px-8 transition-all duration-200"
             >
-              <Link href="/generator">Try the Generator</Link>
+              <Link href="/dashboard">View dashboard</Link>
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            No credit card required · Google or email sign-in
+          </p>
         </section>
 
         <section className="mt-24 grid gap-6 sm:grid-cols-2">

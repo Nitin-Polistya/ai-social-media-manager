@@ -26,6 +26,9 @@ export function SiteHeader() {
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link href="/dashboard">Dashboard</Link>
           </Button>
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Link href="/settings">Settings</Link>
+          </Button>
           <ThemeToggle />
           <LogoutButton />
           <Button asChild size="sm" className="shadow-sm">

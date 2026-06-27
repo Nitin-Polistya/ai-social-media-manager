@@ -19,8 +19,13 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { auth } from "@/lib/firebase/client"
+import { getFirebaseAuth } from "@/lib/firebase/client"
 import { isFirebaseConfigured } from "@/lib/firebase/config"
+import {
+  getFirebaseAuthErrorMessage,
+  validateEmail,
+  validatePassword,
+} from "@/lib/firebase/auth-errors"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -28,7 +33,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  if (!isFirebaseConfigured() || !auth) {
+  if (!isFirebaseConfigured()) {
     return (
       <div className="flex min-h-[80vh] items-center justify-center px-4">
         <Card className="w-full max-w-md rounded-2xl">
@@ -44,12 +49,15 @@ export default function LoginPage() {
   }
 
   async function handleGoogleSignIn() {
+    if (loading) return
+    const auth = getFirebaseAuth()
+    if (!auth) return
     setError(null)
     setLoading(true)
     try {
-      await signInWithPopup(auth!, new GoogleAuthProvider())
+      await signInWithPopup(auth, new GoogleAuthProvider())
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign-in failed")
+      setError(getFirebaseAuthErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -57,24 +65,42 @@ export default function LoginPage() {
 
   async function handleEmailSignIn(event: React.FormEvent) {
     event.preventDefault()
+    const emailErr = validateEmail(email)
+    const passErr = validatePassword(password)
+    if (emailErr || passErr) {
+      setError(emailErr ?? passErr)
+      return
+    }
+    if (loading) return
+    const auth = getFirebaseAuth()
+    if (!auth) return
     setError(null)
     setLoading(true)
     try {
-      await signInWithEmailAndPassword(auth!, email, password)
+      await signInWithEmailAndPassword(auth, email.trim(), password)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign-in failed")
+      setError(getFirebaseAuthErrorMessage(err))
     } finally {
       setLoading(false)
     }
   }
 
   async function handleEmailSignUp() {
+    const emailErr = validateEmail(email)
+    const passErr = validatePassword(password)
+    if (emailErr || passErr) {
+      setError(emailErr ?? passErr)
+      return
+    }
+    if (loading) return
+    const auth = getFirebaseAuth()
+    if (!auth) return
     setError(null)
     setLoading(true)
     try {
-      await createUserWithEmailAndPassword(auth!, email, password)
+      await createUserWithEmailAndPassword(auth, email.trim(), password)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign-up failed")
+      setError(getFirebaseAuthErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -128,6 +154,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
                 required
               />
             </div>

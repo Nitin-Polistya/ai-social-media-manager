@@ -9,10 +9,12 @@ import {
 } from "react"
 import { onAuthStateChanged, type User } from "firebase/auth"
 
-import { auth } from "@/lib/firebase/client"
+import { getFirebaseAuth } from "@/lib/firebase/client"
+import { syncUserProfile } from "@/lib/firebase/user-profile"
 
 interface AuthContextValue {
   user: User | null
+  /** true while Firebase is resolving the initial auth state */
   loading: boolean
 }
 
@@ -26,15 +28,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // getFirebaseAuth() is safe to call here — we are guaranteed to be on the
+    // client inside useEffect.
+    const auth = getFirebaseAuth()
+
     if (!auth) {
+      // Firebase is not configured (missing env vars) — treat as logged-out
       setLoading(false)
       return
     }
 
-    return onAuthStateChanged(auth, (nextUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser)
+      if (nextUser) void syncUserProfile(nextUser)
       setLoading(false)
     })
+
+    return unsubscribe
   }, [])
 
   return (

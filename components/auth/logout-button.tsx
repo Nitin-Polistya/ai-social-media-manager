@@ -5,12 +5,12 @@ import { LogOut } from "lucide-react"
 
 import { useAuth } from "@/components/auth/auth-provider"
 import { Button } from "@/components/ui/button"
-import { auth } from "@/lib/firebase/client"
+import { getFirebaseAuth } from "@/lib/firebase/client"
 
 export function LogoutButton() {
   const { user } = useAuth()
 
-  if (!user || !auth) return null
+  if (!user) return null
 
   return (
     <Button
@@ -18,7 +18,10 @@ export function LogoutButton() {
       variant="ghost"
       size="sm"
       className="hidden sm:inline-flex"
-      onClick={() => signOut(auth!)}
+      onClick={() => {
+        const auth = getFirebaseAuth()
+        if (auth) void signOut(auth)
+      }}
     >
       <LogOut data-icon="inline-start" />
       Logout

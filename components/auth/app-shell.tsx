@@ -5,13 +5,16 @@ import { usePathname } from "next/navigation"
 import { AuthGate } from "@/components/auth/auth-gate"
 import { SiteHeader } from "@/components/layout/site-header"
 
+/** Pages where the top navigation bar should be hidden */
+const HEADERLESS_PATHS = ["/login"]
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const isLoginPage = pathname === "/login"
+  const showHeader = !HEADERLESS_PATHS.includes(pathname)
 
   return (
     <AuthGate>
-      {!isLoginPage ? <SiteHeader /> : null}
+      {showHeader ? <SiteHeader /> : null}
       <main className="flex-1">{children}</main>
     </AuthGate>
   )
