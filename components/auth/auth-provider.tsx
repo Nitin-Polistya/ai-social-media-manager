@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function initAuth() {
       try {
-        await configureAuthPersistence(auth!, "local")
+        await configureAuthPersistence(auth!, "session")
       } catch {
         // Persistence may already be set — continue
       }

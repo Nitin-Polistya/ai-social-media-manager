@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Loader2, LogOut, User } from "lucide-react"
 
+import { RequireAuth } from "@/components/auth/require-auth"
 import { useAuth } from "@/hooks/use-auth"
 import { useUserData } from "@/hooks/use-user-data"
 import { logoutUser } from "@/lib/firebase/auth-actions"
@@ -32,7 +33,7 @@ function getProviderLabel(user: ReturnType<typeof useAuth>["user"]): string {
   return provider ?? "Unknown"
 }
 
-export default function SettingsPage() {
+function SettingsContent() {
   const { user } = useAuth()
   const { profile, loading, error, saveName } = useUserData()
   const [name, setName] = useState("")
@@ -211,5 +212,13 @@ export default function SettingsPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <RequireAuth>
+      <SettingsContent />
+    </RequireAuth>
   )
 }
