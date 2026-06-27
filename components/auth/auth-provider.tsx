@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react"
-import { onAuthStateChanged, type User } from "firebase/auth"
+import { onAuthStateChanged, signOut, type User } from "firebase/auth"
 
 import { getFirebaseAuth } from "@/lib/firebase/client"
 import { configureAuthPersistence } from "@/lib/firebase/persistence"
@@ -39,10 +39,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let lastSyncedUid: string | null = null
 
     async function initAuth() {
+      // Set in-memory persistence first — no session survives a page refresh
       try {
-        await configureAuthPersistence(auth!, "session")
+        await configureAuthPersistence(auth!, "inMemory")
       } catch {
         // Persistence may already be set — continue
+      }
+
+      // Explicitly sign out any stale session that may have been stored
+      // by a previous "local" or "session" persistence setting
+      try {
+        await signOut(auth!)
+      } catch {
+        // Ignore sign-out errors — user may already be signed out
       }
 
       const unsubscribe = onAuthStateChanged(auth!, (nextUser) => {
