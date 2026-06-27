@@ -33,6 +33,3 @@ export function getFirebaseFirestore(): Firestore | null {
   return _firestore
 }
 
-// Convenience accessors — safe to import anywhere; return null on server
-export const auth = getFirebaseAuth()
-export const firestore = getFirebaseFirestore()

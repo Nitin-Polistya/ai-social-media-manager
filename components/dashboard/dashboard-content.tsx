@@ -13,7 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react"
 
-import { useAuth } from "@/components/auth/auth-provider"
+import { useAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -68,19 +68,23 @@ function StatCard({
 }
 
 export function DashboardContent() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<UserStats>(EMPTY_STATS)
   const [loadingStats, setLoadingStats] = useState(true)
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([])
   const [performance, setPerformance] = useState<PostPerformance[]>([])
 
   useEffect(() => {
-    if (!user) return
+    if (authLoading || !user) {
+      if (!authLoading) setLoadingStats(false)
+      return
+    }
     setLoadingStats(true)
     getUserStats(user.uid)
       .then(setStats)
+      .catch(() => setStats(EMPTY_STATS))
       .finally(() => setLoadingStats(false))
-  }, [user])
+  }, [authLoading, user])
 
   useEffect(() => {
     fetch("/api/scheduler")
@@ -94,10 +98,10 @@ export function DashboardContent() {
   }, [])
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <header className="mb-8 space-y-2">
         <p className="text-sm font-medium text-primary">Dashboard</p>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
           Your content at a glance
         </h1>
         <p className="text-muted-foreground">
@@ -105,12 +109,12 @@ export function DashboardContent() {
         </p>
       </header>
 
-      {loadingStats ? (
+      {authLoading || loadingStats ? (
         <div className="mb-8 flex items-center justify-center py-12">
           <Loader2 className="size-8 animate-spin text-primary" />
         </div>
       ) : (
-        <section className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard title="Posts today" value={stats.postsToday} icon={TrendingUp} />
           <StatCard title="Posts this week" value={stats.postsThisWeek} icon={BarChart3} />
           <StatCard title="Posts this month" value={stats.postsThisMonth} icon={Calendar} />
@@ -139,6 +143,7 @@ export function DashboardContent() {
                 </Button>
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -159,6 +164,7 @@ export function DashboardContent() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -186,6 +192,7 @@ export function DashboardContent() {
                 </Button>
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -210,6 +217,7 @@ export function DashboardContent() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

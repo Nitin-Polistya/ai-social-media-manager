@@ -5,7 +5,7 @@ import { Loader2, Sparkles, Wand2 } from "lucide-react"
 
 import { useCopyToClipboard } from "@/components/generator/copy-button"
 import { OutputPanel } from "@/components/generator/output-panel"
-import { useAuth } from "@/components/auth/auth-provider"
+import { useAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -221,7 +221,7 @@ export function PostGenerator() {
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-2">
+    <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 sm:gap-8 lg:grid-cols-2 lg:px-0">
       <Card className="rounded-2xl border-border/70 shadow-sm transition-all duration-300">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">

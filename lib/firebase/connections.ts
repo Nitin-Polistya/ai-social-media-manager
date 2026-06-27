@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc } from "firebase/firestore"
 
-import { getFirebaseFirestore } from "@/lib/firebase/client"
+import { safeFirestore, safeFirestoreVoid } from "@/lib/firebase/firestore-safe"
 
 export interface SocialConnections {
   instagramConnected: boolean
@@ -21,13 +21,11 @@ const DEFAULT_CONNECTIONS: SocialConnections = {
 export async function getSocialConnections(
   uid: string
 ): Promise<SocialConnections> {
-  const firestore = getFirebaseFirestore()
-  if (!firestore) return DEFAULT_CONNECTIONS
-
-  const snap = await getDoc(doc(firestore, "connections", uid))
-  if (!snap.exists()) return DEFAULT_CONNECTIONS
-
-  return { ...DEFAULT_CONNECTIONS, ...snap.data() } as SocialConnections
+  return safeFirestore(async (firestore) => {
+    const snap = await getDoc(doc(firestore, "connections", uid))
+    if (!snap.exists()) return DEFAULT_CONNECTIONS
+    return { ...DEFAULT_CONNECTIONS, ...snap.data() } as SocialConnections
+  }, DEFAULT_CONNECTIONS)
 }
 
 export async function setSocialConnection(
@@ -35,14 +33,13 @@ export async function setSocialConnection(
   platform: SocialPlatform,
   connected: boolean
 ): Promise<void> {
-  const firestore = getFirebaseFirestore()
-  if (!firestore) return
-
-  await setDoc(
-    doc(firestore, "connections", uid),
-    { [platform]: connected },
-    { merge: true }
-  )
+  await safeFirestoreVoid(async (firestore) => {
+    await setDoc(
+      doc(firestore, "connections", uid),
+      { [platform]: connected },
+      { merge: true }
+    )
+  })
 }
 
 export const SOCIAL_PLATFORMS: {

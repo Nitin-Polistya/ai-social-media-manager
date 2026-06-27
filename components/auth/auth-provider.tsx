@@ -10,11 +10,11 @@ import {
 import { onAuthStateChanged, type User } from "firebase/auth"
 
 import { getFirebaseAuth } from "@/lib/firebase/client"
+import { configureAuthPersistence } from "@/lib/firebase/persistence"
 import { syncUserProfile } from "@/lib/firebase/user-profile"
 
 interface AuthContextValue {
   user: User | null
-  /** true while Firebase is resolving the initial auth state */
   loading: boolean
 }
 
@@ -28,23 +28,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // getFirebaseAuth() is safe to call here — we are guaranteed to be on the
-    // client inside useEffect.
     const auth = getFirebaseAuth()
-
     if (!auth) {
-      // Firebase is not configured (missing env vars) — treat as logged-out
       setLoading(false)
       return
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser)
-      if (nextUser) void syncUserProfile(nextUser)
-      setLoading(false)
-    })
+    let cancelled = false
 
-    return unsubscribe
+    async function initAuth() {
+      try {
+        await configureAuthPersistence(auth!, "local")
+      } catch {
+        // Persistence may already be set — continue
+      }
+
+      const unsubscribe = onAuthStateChanged(auth!, (nextUser) => {
+        if (cancelled) return
+        setUser(nextUser)
+
+        if (nextUser) {
+          syncUserProfile(nextUser).catch(() => {
+            // Profile sync is non-blocking
+          })
+        }
+
+        setLoading(false)
+      })
+
+      return unsubscribe
+    }
+
+    let unsubscribe: (() => void) | undefined
+
+    initAuth()
+      .then((unsub) => {
+        unsubscribe = unsub
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+      unsubscribe?.()
+    }
+  }, [])
+
+  useEffect(() => {
+    function handleUnhandledRejection(event: PromiseRejectionEvent) {
+      const reason = event.reason
+      if (
+        reason &&
+        typeof reason === "object" &&
+        "code" in reason &&
+        String((reason as { code: string }).code).startsWith("auth/")
+      ) {
+        event.preventDefault()
+      }
+      if (
+        reason instanceof Error &&
+        reason.message.toLowerCase().includes("offline")
+      ) {
+        event.preventDefault()
+      }
+    }
+
+    window.addEventListener("unhandledrejection", handleUnhandledRejection)
+    return () =>
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection)
   }, [])
 
   return (

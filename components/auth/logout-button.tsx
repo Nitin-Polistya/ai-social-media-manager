@@ -1,11 +1,10 @@
 "use client"
 
-import { signOut } from "firebase/auth"
+import { logoutUser } from "@/lib/firebase/auth-actions"
 import { LogOut } from "lucide-react"
 
-import { useAuth } from "@/components/auth/auth-provider"
+import { useAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
-import { getFirebaseAuth } from "@/lib/firebase/client"
 
 export function LogoutButton() {
   const { user } = useAuth()
@@ -18,10 +17,7 @@ export function LogoutButton() {
       variant="ghost"
       size="sm"
       className="hidden sm:inline-flex"
-      onClick={() => {
-        const auth = getFirebaseAuth()
-        if (auth) void signOut(auth)
-      }}
+      onClick={() => void logoutUser()}
     >
       <LogOut data-icon="inline-start" />
       Logout

@@ -8,7 +8,7 @@ import {
   type Timestamp,
 } from "firebase/firestore"
 
-import { getFirebaseFirestore } from "@/lib/firebase/client"
+import { safeFirestore, safeFirestoreVoid } from "@/lib/firebase/firestore-safe"
 
 export type AnalyticsPostType = "caption" | "hashtag" | "post" | "image"
 
@@ -57,38 +57,39 @@ async function addPost(
   type: AnalyticsPostType,
   content: string
 ): Promise<void> {
-  const firestore = getFirebaseFirestore()
-  if (!firestore) return
-  await addDoc(collection(firestore, "posts"), {
-    uid,
-    type,
-    content,
-    createdAt: serverTimestamp(),
+  await safeFirestoreVoid(async (firestore) => {
+    await addDoc(collection(firestore, "posts"), {
+      uid,
+      type,
+      content,
+      createdAt: serverTimestamp(),
+    })
   })
 }
 
 export async function trackGeneration(input: TrackGenerationInput): Promise<void> {
-  const firestore = getFirebaseFirestore()
-  if (!firestore) return
-
   const { uid, mode, caption, hashtags, imageUrl } = input
 
-  await addPost(uid, "caption", caption)
-  await addPost(uid, "hashtag", hashtags.join(" "))
+  try {
+    await addPost(uid, "caption", caption)
+    await addPost(uid, "hashtag", hashtags.join(" "))
 
-  if (mode === "text") {
-    await addPost(
-      uid,
-      "post",
-      JSON.stringify({ caption, hashtags, mode: "text" })
-    )
-    if (imageUrl) await addPost(uid, "image", imageUrl)
-  } else {
-    await addPost(
-      uid,
-      "post",
-      JSON.stringify({ caption, hashtags, mode: "image" })
-    )
+    if (mode === "text") {
+      await addPost(
+        uid,
+        "post",
+        JSON.stringify({ caption, hashtags, mode: "text" })
+      )
+      if (imageUrl) await addPost(uid, "image", imageUrl)
+    } else {
+      await addPost(
+        uid,
+        "post",
+        JSON.stringify({ caption, hashtags, mode: "image" })
+      )
+    }
+  } catch {
+    // Analytics must never block generation
   }
 }
 
@@ -102,12 +103,10 @@ export async function getUserStats(uid: string): Promise<UserStats> {
     totalImages: 0,
   }
 
-  const firestore = getFirebaseFirestore()
-  if (!firestore) return empty
-
-  const snap = await getDocs(
-    query(collection(firestore, "posts"), where("uid", "==", uid))
-  )
+  return safeFirestore(async (firestore) => {
+    const snap = await getDocs(
+      query(collection(firestore, "posts"), where("uid", "==", uid))
+    )
 
   const now = new Date()
   const todayStart = startOfDay(now)
@@ -133,4 +132,5 @@ export async function getUserStats(uid: string): Promise<UserStats> {
   })
 
   return stats
+  }, empty)
 }
